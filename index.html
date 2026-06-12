@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORTRESS — Tower Defense</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>⚔ Virus Defence</h1>
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-icon">❤️</span>
+      <div>
+        <div class="stat-val" id="livesVal">20</div>
+        <div class="stat-label">VIDAS</div>
+      </div>
+    </div>
+    <div class="stat">
+      <span class="stat-icon">💰</span>
+      <div>
+        <div class="stat-val" id="goldVal">150</div>
+        <div class="stat-label">OURO</div>
+      </div>
+    </div>
+    <div class="stat">
+      <span class="stat-icon">💀</span>
+      <div>
+        <div class="stat-val" id="killsVal">0</div>
+        <div class="stat-label">ABATES</div>
+      </div>
+    </div>
+    <div class="stat">
+      <span class="stat-icon">🌊</span>
+      <div>
+        <div class="stat-val" id="waveVal">0</div>
+        <div class="stat-label">ONDA</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="popUp" id="enemyPopup" style="display:none;" onclick="closeEnemyPopup()">
+  <div class="popUp-box" onclick="event.stopPropagation()">
+    <div class="popUp-title">⚠ AMEAÇAS DESTA ONDA</div>
+    <div class="popUp-enemyName" id="popupEnemyName"></div>
+    <div class="popUp-description" id="popupEnemyDesc"></div>
+    <div class="popUp-stats" id="popupEnemyStats"></div>
+    <button class="btn btn-primary" style="margin-top:16px;" onclick="closeEnemyPopup()">ENTENDIDO</button>
+  </div>
+</div>
+
+<!-- POPUP PERGUNTA PÓS-ONDA -->
+<div id="quizPopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.7); z-index:9999; display:none; justify-content:center; align-items:center;">
+  <div style="background:#1a2233; border:2px solid #c9a84c; border-radius:12px; padding:24px 32px;
+    max-width:420px; width:90%; color:#e0e0e0; font-family:'Share Tech Mono',monospace; position:relative;">
+    <button onclick="closeQuiz()" style="position:absolute; top:8px; right:12px; background:none;
+      border:none; color:#e05050; font-size:20px; cursor:pointer;">✕</button>
+    <h3 style="color:#c9a84c; margin-top:0;">🧠 Pergunta da Onda</h3>
+    <p id="quizQuestion" style="font-size:14px; line-height:1.6;"></p>
+  </div>
+</div>
+<!-- POPUP OBRIGADO (PÓS ONDA 5) -->
+<div id="thanksPopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
+  <div style="background:#1a2233; border:2px solid #c9a84c; border-radius:12px; padding:28px 32px;
+    max-width:420px; width:90%; color:#e0e0e0; font-family:'Share Tech Mono',monospace; text-align:center;">
+    <h3 style="color:#c9a84c; margin-top:0;">🎉 Obrigado por jogar!</h3>
+    <p style="font-size:14px; line-height:1.6;">Você completou as 5 ondas da apresentação. Deseja continuar jogando no modo livre ou encerrar?</p>
+    <div style="display:flex; gap:12px; justify-content:center; margin-top:16px;">
+      <button onclick="continuePlaying()" style="padding:8px 20px; background:#4caf7d; border:none;
+        border-radius:6px; color:#fff; cursor:pointer; font-family:inherit; font-size:13px;">▶ Continuar</button>
+      <button onclick="stopPlaying()" style="padding:8px 20px; background:#e05050; border:none;
+        border-radius:6px; color:#fff; cursor:pointer; font-family:inherit; font-size:13px;">■ Parar</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="canvas-wrap">
+    <canvas id="gameCanvas"></canvas>
+    <div class="wave-bar">
+      <span class="wave-label">PROGRESSO DA ONDA</span>
+      <div class="wave-progress"><div class="wave-fill" id="waveFill" style="width:0%"></div></div>
+      <span id="waveStatus">Aguardando início...</span>
+    </div>
+  </div>
+
+  <div class="side-panel">
+    <div class="panel-block">
+      <div class="panel-title">Torres</div>
+      <button class="tower-btn" id="btn-archer" onclick="selectTower('archer')">
+        <span class="tower-icon">🏹</span>
+        <div class="tower-info">
+          <div class="tower-name">Sandbox</div>
+          <div class="tower-cost">💰 50</div>
+          <div class="tower-desc">templategenerico</div>
+        </div>
+      </button>
+      <button class="tower-btn" id="btn-cannon" onclick="selectTower('cannon')">
+        <span class="tower-icon">💣</span>
+        <div class="tower-info">
+          <div class="tower-name">Backup</div>
+          <div class="tower-cost">💰 50</div>
+          <div class="tower-desc">templategenerico</div>
+        </div>
+      </button>
+      <button class="tower-btn" id="btn-ice" onclick="selectTower('ice')">
+        <span class="tower-icon">❄️</span>
+        <div class="tower-info">
+          <div class="tower-name">Firewall</div>
+          <div class="tower-cost">💰 50</div>
+          <div class="tower-desc">templategenerico</div>
+        </div>
+      </button>
+      <button class="tower-btn" id="btn-laser" onclick="selectTower('laser')">
+        <span class="tower-icon">🔴</span>
+        <div class="tower-info">
+          <div class="tower-name">Anti-Spyware</div>
+          <div class="tower-cost">💰 50</div>
+          <div class="tower-desc">templategenerico</div>
+        </div>
+      </button>
+    </div>
+
+    <div class="panel-block">
+      <div class="panel-title">Ações</div>
+      <button class="btn btn-primary" onclick="startWave()" id="startBtn">▶ INICIAR ATAQUE</button>
+      <div style="height:6px"></div>
+      <button class="btn btn-danger" onclick="sellTower()" id="sellBtn">✕ VENDER DEFESA</button>
+      <div style="height:6px"></div>
+      <button class="btn btn-primary" onclick="showThreats()" id="threatsBtn">🔍 VER AMEAÇAS</button>
+    </div>
+
+    <div class="panel-block" id="infoPanel">
+      <div class="panel-title">Selecionado</div>
+      <div id="infoContent" style="color:var(--muted);font-size:11px;">Clique numa torre no mapa para ver detalhes.</div>
+    </div>
+
+    <div class="panel-block">
+      <div class="panel-title">Inimigos</div>
+      <div id="enemyLegend" style="font-size:10px;line-height:1.8;">
+        <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4ade80;vertical-align:middle;margin-right:6px;"></span>Trojan</div>
+        <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;vertical-align:middle;margin-right:6px;"></span>Ransomware</div>
+        <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#a855f7;vertical-align:middle;margin-right:6px;"></span>Worm</div>
+        <div><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#ef4444;vertical-align:middle;margin-right:6px;"></span>Spyware</div>
+      </div>
+    </div>
+
+    <div class="panel-block">
+      <div class="panel-title">Log</div>
+      <div id="logBox"></div>
+    </div>
+  </div>
+</div>
+
+<div id="overlay">
+  <h2 id="overlayTitle">Virus Defence</h2>
+  <p id="overlayMsg">Coloque defesas no mapa e defenda seu computador</p>
+  <button class="btn btn-primary" onclick="startGame()">▶ COMEÇAR JOGO</button>
+</div>
+
+<div id="tooltip"></div>
+
+<script src="game.js"></script>
+</body>
+</html>
